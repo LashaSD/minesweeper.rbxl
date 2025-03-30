@@ -1,0 +1,30 @@
+{
+    "name": "Minesweeper",
+    "tree": {
+        "$className": "DataModel",
+
+        "ServerScriptService": {
+            "Server": {
+                "$path": "./src/Server"
+            }
+        },
+        "StarterPlayer": {
+            "StarterPlayerScripts": {
+                "Client": {
+                    "$path": "./src/Client"
+                }
+            }
+        },
+        "ReplicatedStorage": {
+            "Game": {
+                "$className": "Folder",
+                "Common": {
+                    "$path": "./src/Common/",
+                    "Packages": {
+                        "$path": "./Packages"
+                    }
+                }
+            }
+        }
+    }
+}
