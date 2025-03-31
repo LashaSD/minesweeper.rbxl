@@ -3,6 +3,7 @@
 set -e
 
 SRC="src"
+NAME="minesweeper"
 
 usage() {
     echo "Usage: $0 [options]"
@@ -10,7 +11,7 @@ usage() {
     echo "Options:"
     echo "  run           Run Rojo Server"
     echo "  build         Builds the Game"
-    echo "  install       Install all Rokit and Wally Packages"
+    echo "  install       Install all Aftman and Wally Packages"
     echo
     echo "Example:"
     echo "  $0 run              Run Rojo Server"
@@ -29,7 +30,7 @@ install_packages() {
 
 build() {
     rojo sourcemap --output sourcemap.json --include-non-scripts
-    rojo build -o game.rbxl default.project.json
+    rojo build -o "$NAME".rbxl default.project.json
 }
 
 run() {
