@@ -3,6 +3,12 @@
     "tree": {
         "$className": "DataModel",
 
+        "Players": {
+            "$className": "Players",
+            "$properties": {
+                "CharacterAutoLoads": false
+            }
+        },
         "ServerScriptService": {
             "Server": {
                 "$path": "./src/Server"
@@ -24,6 +30,12 @@
                         "$path": "./Packages"
                     }
                 }
+            }
+        },
+        "TextChatService": {
+            "$className": "TextChatService",
+            "$properties": {
+                "ChatVersion": "TextChatService"
             }
         }
     }
