@@ -7,15 +7,18 @@ local Packages = ReplicatedStorage.Game.Common.Packages;
 
 -- Imports
 local Fusion = require(Packages.Fusion);
-
 local Children = Fusion.Children;
+
+local Minesweeper = require(script.Parent.Parent.Modules.Minesweeper);
 
 local Root = require(script.Parent.Root);
 
 -- Main
 local scope = Fusion.scoped(Fusion);
-local Minesweeper = scope:New "ScreenGui" {
+local board = Minesweeper.Init(10, 10);
+
+local MinesweeperUI = scope:New "ScreenGui" {
     Parent = Players.LocalPlayer.PlayerGui,
     Name = "Minesweeper",
-    [Children] = Root(scope)
+    [Children] = Root(scope, board)
 }
