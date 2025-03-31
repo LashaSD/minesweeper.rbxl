@@ -7,11 +7,14 @@ local Packages = ReplicatedStorage.Game.Common.Packages;
 -- Imports
 local Fusion = require(Packages.Fusion);
 
+local Board = require(script.Parent.Parent.Parent.Modules.Minesweeper);
+
 local Root = require(script.Parent.Parent.Root);
 
 return {
     story = function()
         local scope = Fusion.scoped(Fusion);
-        return Root(scope);
+        local board = Board.Init(10, 10);
+        return Root(scope, board);
     end
 }
