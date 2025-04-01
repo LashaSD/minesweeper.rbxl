@@ -114,7 +114,7 @@ end
 
 local GameOverMessage = function(scope: Scope)
     return scope:New "TextLabel" {
-        Text = "Game Over.",
+        Text = "Game Over",
         TextColor3 = Color3.fromRGB(255, 255, 255),
         TextScaled = true,
         Font = Enum.Font.RobotoMono,
@@ -128,7 +128,7 @@ end
 
 local YouWonMessage = function(scope: Scope)
     return scope:New "TextLabel" {
-        Text = "You Won.",
+        Text = "You Won",
         TextColor3 = Color3.fromRGB(255, 255, 255),
         TextScaled = true,
         Font = Enum.Font.RobotoMono,
@@ -140,7 +140,7 @@ local YouWonMessage = function(scope: Scope)
     }
 end
 
-local PlayAgainPrompt = function(scope: Scope, gameStarted, gameResult, callback: () -> ())
+local PlayAgainPrompt = function(scope: Scope, gameStarted, gameResult)
     return scope:New "TextButton" {
         Text = "Play Again",
         TextColor3 = Color3.fromRGB(255, 255, 255),
@@ -154,17 +154,16 @@ local PlayAgainPrompt = function(scope: Scope, gameStarted, gameResult, callback
         [OnEvent "MouseButton1Up"] = function()
             gameStarted:set(false);
             gameResult:set(0);
-            callback();
         end
     }
 end
 
-local GameScope = Fusion.scoped(Fusion);
-
 return function(scope: Scope)
     local gameStarted = scope:Value(false);
     local gameResult = scope:Value(GameResult.Uninitialized);
+    local gameScope = Fusion.scoped(Fusion);
     local board = nil;
+    local minesweeperUI: Instance? = nil;
 
     local children = scope:Computed(function(use, scope)
         local tbl = {};
@@ -176,11 +175,12 @@ return function(scope: Scope)
                 table.insert(tbl, YouWonMessage(scope));
             end
 
-            table.insert(tbl, PlayAgainPrompt(scope, gameStarted, gameResult, function() 
-                GameScope:doCleanup();
-            end));
+            table.insert(tbl, PlayAgainPrompt(scope, gameStarted, gameResult));
+            if minesweeperUI ~= nil then
+                table.insert(tbl, minesweeperUI);
+            end
         elseif use(gameStarted) and use(gameResult) == GameResult.Uninitialized then
-            GameScope = Fusion.scoped(Fusion);
+            gameScope = Fusion.scoped(Fusion);
 
             if board ~= nil then
                 Board.Deinit(board);
@@ -191,8 +191,19 @@ return function(scope: Scope)
             local mineDensity = math.random(10, 25) / 100;
             board = Board.Init(rows, cols, math.ceil(rows * cols * mineDensity), gameResult);
 
-            table.insert(tbl, Minesweeper(GameScope, board));
+            minesweeperUI = Minesweeper(gameScope, board);
+            if minesweeperUI ~= nil then
+                table.insert(tbl, minesweeperUI);
+            end
         elseif not use(gameStarted) and use(gameResult) == GameResult.Uninitialized then
+            if gameScope ~= nil then
+                gameScope:doCleanup();
+            end
+
+            if minesweeperUI ~= nil then
+                minesweeperUI:Destroy();
+            end
+
             table.insert(tbl, BtnContainer(scope, "Play", gameStarted));
         end
 
