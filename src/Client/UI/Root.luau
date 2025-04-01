@@ -12,6 +12,8 @@ local OnEvent = Fusion.OnEvent
 local peek = Fusion.peek;
 
 local Board = require(Modules.Minesweeper);
+local GameResult = require(Modules.Minesweeper.GameResultEnum);
+
 local Minesweeper = require(script.Parent.Minesweeper);
 
 type Scope = Fusion.Scope<typeof(Fusion)>;
@@ -28,9 +30,9 @@ local Gradient = function(scope: Scope, rotation: number, offset)
     }
 end
 
-local PlayBtn = function(scope: Scope, clicked, color, gradient)
+local Btn = function(scope: Scope, text: string, clicked, color, gradient)
     return scope:New "TextButton" {
-        Text = "Play",
+        Text = text,
         TextColor3 = color,
         Font = Enum.Font.RobotoMono,
         Size = UDim2.fromScale(1, 1),
@@ -43,7 +45,7 @@ local PlayBtn = function(scope: Scope, clicked, color, gradient)
     }
 end
 
-local PlayBtnContainer = function(scope: Scope, gameStarted)
+local BtnContainer = function(scope: Scope, text: string, promptTriggered)
     local posGoal = scope:Value(UDim2.fromScale(.5, 5));
     local pos = scope:Spring(posGoal);
 
@@ -75,7 +77,7 @@ local PlayBtnContainer = function(scope: Scope, gameStarted)
         -- on start
         hoverLock:set(true);
         if peek(clickedAnim) == clickedGoal then
-            gameStarted:set(true);
+            promptTriggered:set(true);
             disconnect();
         end
     end);
@@ -101,7 +103,7 @@ local PlayBtnContainer = function(scope: Scope, gameStarted)
                 Size = UDim2.fromScale(1, 1),
                 BackgroundColor3 = Color3.new(255, 255, 255),
                 [Children] = {
-                    PlayBtn(scope, clicked, color, Gradient(scope, -90, clickedAnim)),
+                    Btn(scope, text, clicked, color, Gradient(scope, -90, clickedAnim)),
                     hoverGradient,
                 }
             },
@@ -110,24 +112,98 @@ local PlayBtnContainer = function(scope: Scope, gameStarted)
     }
 end
 
+local GameOverMessage = function(scope: Scope)
+    return scope:New "TextLabel" {
+        Text = "Game Over.",
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextScaled = true,
+        Font = Enum.Font.RobotoMono,
+        Name = "GameOverMessage",
+        AnchorPoint = Vector2.new(.5, .5),
+        Size = UDim2.fromScale(.5, .5),
+        Position = UDim2.fromScale(.5, .25),
+        BackgroundTransparency = 1
+    }
+end
+
+local YouWonMessage = function(scope: Scope)
+    return scope:New "TextLabel" {
+        Text = "You Won.",
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextScaled = true,
+        Font = Enum.Font.RobotoMono,
+        Name = "YouWonMessage",
+        AnchorPoint = Vector2.new(.5, .5),
+        Size = UDim2.fromScale(.5, .5),
+        Position = UDim2.fromScale(.5, .25),
+        BackgroundTransparency = 1
+    }
+end
+
+local PlayAgainPrompt = function(scope: Scope, gameStarted, gameResult, callback: () -> ())
+    return scope:New "TextButton" {
+        Text = "Play Again",
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextScaled = true,
+        Font = Enum.Font.RobotoMono,
+        Name = "PlayAgainPrompt",
+        AnchorPoint = Vector2.new(.5, .5),
+        Size = UDim2.fromScale(.5, .15),
+        Position = UDim2.fromScale(.5, .75),
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+        [OnEvent "MouseButton1Up"] = function()
+            gameStarted:set(false);
+            gameResult:set(0);
+            callback();
+        end
+    }
+end
+
+local GameScope = Fusion.scoped(Fusion);
+
 return function(scope: Scope)
     local gameStarted = scope:Value(false);
-    local child = scope:Computed(function(use, scope)
-        if not use(gameStarted) then
-            return PlayBtnContainer(scope, gameStarted);
-        else
-            -- TODO(!!): Remove hardcoded values
-            local board = Board.Init(10, 10);
-            return Minesweeper(scope, board);
+    local gameResult = scope:Value(GameResult.Uninitialized);
+    local board = nil;
+
+    local children = scope:Computed(function(use, scope)
+        local tbl = {};
+
+        if use(gameResult) > GameResult.Uninitialized then
+            if use(gameResult) == GameResult.Lose then
+                table.insert(tbl, GameOverMessage(scope));
+            elseif use(gameResult) == GameResult.Win then
+                table.insert(tbl, YouWonMessage(scope));
+            end
+
+            table.insert(tbl, PlayAgainPrompt(scope, gameStarted, gameResult, function() 
+                GameScope:doCleanup();
+            end));
+        elseif use(gameStarted) and use(gameResult) == GameResult.Uninitialized then
+            GameScope = Fusion.scoped(Fusion);
+
+            if board ~= nil then
+                Board.Deinit(board);
+            end
+
+            local rows = math.random(10, 18);
+            local cols = math.random(10, 18);
+            local mineDensity = math.random(10, 25) / 100;
+            board = Board.Init(rows, cols, math.ceil(rows * cols * mineDensity), gameResult);
+
+            table.insert(tbl, Minesweeper(GameScope, board));
+        elseif not use(gameStarted) and use(gameResult) == GameResult.Uninitialized then
+            table.insert(tbl, BtnContainer(scope, "Play", gameStarted));
         end
+
+        return tbl;
     end);
 
     return scope:New "Frame" {
         Name = "Root",
-        -- Size = UDim2.fromScale(1, 1),
         Position = UDim2.fromScale(0, -0.08),
         Size = UDim2.fromScale(1, 1.08),
         BackgroundColor3 = Color3.fromHex("181818"),
-        [Children] = child
+        [Children] = children
     }
 end

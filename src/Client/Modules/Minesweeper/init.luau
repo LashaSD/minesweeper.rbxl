@@ -9,6 +9,7 @@ local Fusion = require(Packages.Fusion);
 local peek = Fusion.peek;
 
 local CellState = require(script.CellStateEnum);
+local GameResult = require(script.GameResultEnum);
 
 -- Types
 type Scope = Fusion.Scope<typeof(Fusion)>
@@ -21,7 +22,9 @@ export type Board = {
 
 type GameData = {
     Scope: Scope,
-    DugCells: Fusion.Computed<number>,
+    DugCells: Fusion.Value<number>,
+    GameResult: Fusion.Value<number>,
+    InitialMines: number
 }
 
 -- Vars
@@ -31,11 +34,11 @@ local GameTbl: { [Board]: GameData } = {};
 local Board = {}
 
 function Board.IsAvailable(board: Board, row: number, col: number)
-    return peek(board.Grid[row][col]) ~= CellState.Disabled;
+    return peek(board.Grid[row][col]) ~= CellState.Exploded and peek(board.Grid[row][col]) ~= CellState.Exploded_Mine and peek(board.Grid[row][col]) ~= CellState.Exploded_Dug;
 end
 
 function Board.IsMine(board: Board, row: number, col: number)
-    return peek(board.Grid[row][col]) == CellState.Mine or peek(board.Grid[row][col]) == CellState.Flagged_Mine;
+    return peek(board.Grid[row][col]) == CellState.Mine or peek(board.Grid[row][col]) == CellState.Flagged_Mine or peek(board.Grid[row][col]) == CellState.Exploded_Mine;
 end
 
 function Board.IsDug(board: Board, row: number, col: number)
@@ -56,18 +59,25 @@ function Board.MarkAsMine(board: Board, row: number, col: number)
     board.Grid[row][col]:set(CellState.Mine);
 end
 
-function Board.Disable(board: Board)
+function Board.Explode(board: Board)
     for row = 1, board.Rows do
         for col = 1, board.Cols do
-            board.Grid[row][col]:set(CellState.Disabled);
+            if Board.IsMine(board, row, col) then
+                board.Grid[row][col]:set(CellState.Exploded_Mine);
+            elseif peek(board.Grid[row][col]) == CellState.Dug then
+                board.Grid[row][col]:set(CellState.Exploded_Dug);
+            else
+                board.Grid[row][col]:set(CellState.Exploded);
+            end
         end
     end
+
+    GameTbl[board].GameResult:set(GameResult.Lose);
 end
 
 function Board.Dig(board: Board, row: number, col: number)
     if Board.IsArmedMine(board, row, col) then
-        print("Boom!");
-        Board.Disable(board);
+        Board.Explode(board);
         return
     end
 
@@ -75,15 +85,20 @@ function Board.Dig(board: Board, row: number, col: number)
 
     local dugCells = GameTbl[board].DugCells;
     local dugCellsValue = peek(dugCells);
+    dugCells:set(dugCellsValue + 1);
+
     board.Grid[row][col]:set(CellState.Dug);
 
     if dugCellsValue == 0 then
-        -- TODO(!!): Remove the hardcoded value
-        Board.Populate(board, 10);
+        Board.Populate(board, GameTbl[board].InitialMines);
     end
 
     if Board.ComputeValue(board, row, col) == 0 or dugCellsValue == 0 then
         Board.BFS_Zero_Pop(board, row, col);
+    end
+
+    if (peek(dugCells) + Board.CountMines(board)) == (board.Rows * board.Cols) then
+        GameTbl[board].GameResult:set(GameResult.Win);
     end
 
     return false;
@@ -146,7 +161,7 @@ function Board.ComputeValue(board: Board, row: number, col: number)
     return v;
 end
 
-function Board.Init(rows: number, cols: number): Board
+function Board.Init(rows: number, cols: number, mines: number, gameResult: Fusion.Value<number>): Board
     local scope = Fusion.scoped(Fusion);
     local grid = {};
     for row = 1, rows do
@@ -162,21 +177,12 @@ function Board.Init(rows: number, cols: number): Board
         Grid = grid
     }
 
+    gameResult:set(0);
     GameTbl[board] = {
         Scope = scope,
-        DugCells = scope:Computed(function(use, scope)
-            local cnt = 0;
-
-            for row = 1, rows do
-                for col = 1, cols do
-                    if use(board.Grid[row][col]) == CellState.Dug then
-                        cnt += 1;
-                    end
-                end
-            end
-
-            return cnt;
-        end)
+        DugCells = scope:Value(0),
+        GameResult = gameResult,
+        InitialMines = mines
     }
 
     return board;

@@ -1,6 +1,7 @@
 -- Roblox Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage");
 local TweenService = game:GetService("TweenService");
+local RunService = game:GetService("RunService");
 
 -- Paths
 local Packages = ReplicatedStorage.Game.Common.Packages;
@@ -58,6 +59,29 @@ local Colors = {
 }
 
 -- Components
+local function Shake(duration: number, intensity: number, shakeOffset)
+    local startTime = tick()
+
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if tick() - startTime > duration then
+            shakeOffset:set(UDim2.fromOffset(0, 0))
+            connection:Disconnect()
+            return
+        end
+
+        local xOffset = (math.random() * 2 - 1) * intensity
+        local yOffset = (math.random() * 2 - 1) * intensity
+        shakeOffset:set(UDim2.fromOffset(xOffset, yOffset))
+    end)
+end
+
+local function Pop(size, defaultSize: UDim2, goalSize: UDim2, waitTime: number)
+    size:set(goalSize) -- Shrink to 80%
+    task.wait(waitTime) -- Wait briefly
+    size:set(defaultSize) -- Return to normal
+end
+
 local AspectRatio = function(scope: Scope, x: number, y: number?)
     return scope:New "UIAspectRatioConstraint" {
         AspectRatio = if y ~= nil then x / y else x
@@ -157,11 +181,19 @@ local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
     local observer = Board.ObserveCell(board, row, col);
     local state = board.Grid[row][col];
 
+    local shakeOffset = scope:Value(UDim2.fromOffset(0, 0));
+    local pos = scope:Computed(function(use, scope)
+        return Cell_Pos(board, row, col) + use(shakeOffset);
+    end);
+
     local disconnect
     disconnect = observer:onChange(function()
         local stateValue = peek(state);
-        if stateValue == CellState.Disabled then
-            color:set(Colors.Cell.Background);
+        if stateValue == CellState.Exploded then
+            if peek(color) == Colors.Cell.Hover.Background then
+                color:set(Colors.Cell.Background);
+            end
+            Shake(.3, 5, shakeOffset)
             disconnect();
         elseif stateValue == CellState.Dug then
             -- some new kind of animation and text value
@@ -170,15 +202,19 @@ local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
                 transparency:set(1);
             end
             color:set(Colors.Cell.DugMap[Board.ComputeValue(board, row, col)]);
+            Pop(size, Cell_Size(board, row, col), Cell_Size(board, row, col) - elevation, .05);
         end
     end)
 
     local text = scope:Computed(function(use)
-        if use(state) == CellState.Dug then
+        if use(transparency) == 1 then return "" end
+        if use(state) == CellState.Dug or use(state) == CellState.Exploded_Dug then
             local cellValue = Board.ComputeValue(board, row, col);
             return if cellValue > 0 then tostring(cellValue) else "";
         elseif use(state) == CellState.Flagged or use(state) == CellState.Flagged_Mine then
             return "🚩";
+        elseif use(state) == CellState.Exploded_Mine then
+            return "M"
         end
 
         return "";
@@ -189,14 +225,15 @@ local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
 
     size:set(Cell_Size(board, row, col));
     corner:set(UDim.new(0, 0));
+
     return scope:New "TextButton" {
-        Text = text,
-        TextColor3 = Colors.Cell.Foreground,
-        Font = Enum.Font.RobotoMono,
+        -- Text = text,
+        -- TextColor3 = Colors.Cell.Foreground,
+        -- Font = Enum.Font.RobotoMono,
         BackgroundColor3 = colorAnim,
         BackgroundTransparency = transparencyAnim,
         AnchorPoint = Vector2.new(.5, .5),
-        Position = Cell_Pos(board, row, col),
+        Position = pos,
         Size = sizeAnim,
         ZIndex = z,
 
@@ -265,6 +302,13 @@ local Minefield = function(scope: Scope, board: Board)
         return Colors.Minefield.Background:Lerp(Colors.Minefield.Goal, use(Board.DugCells(board)) / (board.Rows * board.Cols));
     end);
 
+    local maxx = math.max(board.Rows, board.Cols);
+    local lerp = function(a: number, b: number, t: number)
+        return a + (b - a) * t;
+    end
+    -- maps range [10, 18] to [.5, .75]
+    local size = lerp(.5, .75, (maxx - 10) / 8);
+
     local colorTween = scope:Tween(backgroundColor, TweenInfo.new(0.05, Enum.EasingStyle.Linear));
 
     return scope:New "Frame" {
@@ -272,12 +316,12 @@ local Minefield = function(scope: Scope, board: Board)
 
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.fromScale(0.5, 0.5),
-        Size = UDim2.fromScale(0.5, 0.5),
+        Size = UDim2.fromScale(size, size),
 
         BackgroundColor3 = colorTween,
 
         [Children] = {
-            AspectRatio(scope, 1),
+            AspectRatio(scope, board.Rows, board.Cols),
             RoundCorner(scope, UDim.new(0.01, 0)),
             CellContainer(scope, board),
             CircularGradientAnim(scope)
@@ -285,11 +329,36 @@ local Minefield = function(scope: Scope, board: Board)
     }
 end
 
+local ClockValue = function(clock)
+    return task.spawn(function()
+        local elapsed = 1;
+        local totalElapsed = 0;
+        while true do
+            local diff = 1 - elapsed;
+            elapsed = task.wait(1 - diff)
+            totalElapsed += elapsed;
+            clock:set(totalElapsed);
+        end
+    end)
+end
+
 local Clock = function(scope: Scope)
     -- TODO(!!): Properly implement the game clock
     local pos = scope:Value(UDim2.fromScale(.5, -1));
     local posAnim = scope:Tween(pos, TweenInfo.new(.5, Enum.EasingStyle.Quad));
 
+    local clockValue = scope:Value(0);
+    local clockThread = ClockValue(clockValue);
+    table.insert(scope, function()
+        task.cancel(clockThread);
+    end)
+
+    local text = scope:Computed(function(use)
+        local totalSeconds = use(clockValue);
+        local minutes = math.floor(totalSeconds / 60);
+        local seconds = totalSeconds % 60;
+        return string.format("%02d:%02d", minutes, seconds);
+    end)
 
     pos:set(UDim2.fromScale(.5, .01));
     return scope:New "TextLabel" {
@@ -301,7 +370,7 @@ local Clock = function(scope: Scope)
 
         BackgroundTransparency = 1,
 
-        Text = "00:00",
+        Text = text,
         TextColor3 = Colors.Clock.Foreground,
         TextScaled = true,
 
@@ -317,8 +386,6 @@ end
 return function(scope: Scope, board: Board)
     return scope:New "Frame" {
         Name = "Minesweeper",
-        -- Position = UDim2.fromScale(0, -0.08),
-        -- Size = UDim2.fromScale(1, 1.08),
         Size = UDim2.fromScale(1, 1),
         BackgroundColor3 = Colors.Screen.Background,
         [Children] = {
