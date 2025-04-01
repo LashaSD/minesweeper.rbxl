@@ -115,27 +115,28 @@ end
 local GameOverMessage = function(scope: Scope)
     return scope:New "TextLabel" {
         Text = "Game Over",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextColor3 = Color3.fromRGB(0, 0, 0),
         TextScaled = true,
         Font = Enum.Font.RobotoMono,
         Name = "GameOverMessage",
         AnchorPoint = Vector2.new(.5, .5),
-        Size = UDim2.fromScale(.5, .5),
+        Size = UDim2.fromScale(.5, .15),
         Position = UDim2.fromScale(.5, .25),
-        BackgroundTransparency = 1
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     }
 end
 
 local YouWonMessage = function(scope: Scope)
     return scope:New "TextLabel" {
         Text = "You Won",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
+        TextColor3 = Color3.fromRGB(0, 0, 0),
         TextScaled = true,
         Font = Enum.Font.RobotoMono,
         Name = "YouWonMessage",
         AnchorPoint = Vector2.new(.5, .5),
-        Size = UDim2.fromScale(.5, .5),
+        Size = UDim2.fromScale(.5, .15),
         Position = UDim2.fromScale(.5, .25),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
         BackgroundTransparency = 1
     }
 end
