@@ -148,10 +148,15 @@ function Board.CountCells(board: Board, ...: number)
 
     for row = 1, board.Rows do
         for col = 1, board.Cols do
+            local ok = true;
             for _, state in checkTbl do
-                if board.Grid[row][col] == state then
-                    cnt += 1;
+                if board.Grid[row][col] ~= state then
+                    ok = false;
                 end
+            end
+
+            if ok then
+                cnt += 1
             end
         end
     end
