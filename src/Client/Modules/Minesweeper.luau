@@ -77,16 +77,15 @@ function Board.ComputeValue(board: Board, row: number, col: number)
         return if Board.IsMine(board, i, j) then 1 else 0;
     end
 
-    local v = 0 do
-        v += value(row, col-1);
-        v += value(row-1, col-1);
-        v += value(row-1, col);
-        v += value(row-1, col+1);
-        v += value(row, col+1);
-        v += value(row+1, col+1);
-        v += value(row+1, col);
-        v += value(row+1, col-1);
-    end
+    local v = 0
+    + value(row, col-1)
+    + value(row-1, col-1)
+    + value(row-1, col)
+    + value(row-1, col+1)
+    + value(row, col+1)
+    + value(row+1, col+1)
+    + value(row+1, col)
+    + value(row+1, col-1)
 
     return v;
 end
