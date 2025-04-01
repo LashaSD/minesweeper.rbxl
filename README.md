@@ -1,6 +1,6 @@
 # 🎮 Minesweeper.rbxl
 
-A small project to explore UI development with Fusion.
+A small project to experiment with UI development using Fusion. This was built in just two days, so the code was written quickly and is subject to major refactoring.
 
 ## 🚀 Run Locally
 
