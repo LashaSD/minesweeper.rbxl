@@ -200,6 +200,13 @@ function Board.ObserveCell(board: Board, row: number, col: number)
     return scope:Observer(board.Grid[row][col]);
 end
 
+function Board.ObserveGameResult(board: Board)
+    assert(GameTbl[board] ~= nil, `board was not initialized`);
+    local scope = GameTbl[board].Scope;
+
+    return scope:Observer(GameTbl[board].GameResult);
+end
+
 function Board.Deinit(board: Board)
     if GameTbl[board] == nil then return end
 

@@ -342,14 +342,19 @@ local ClockValue = function(clock)
     end)
 end
 
-local Clock = function(scope: Scope)
-    -- TODO(!!): Properly implement the game clock
+local Clock = function(scope: Scope, board: Board)
     local pos = scope:Value(UDim2.fromScale(.5, -1));
     local posAnim = scope:Tween(pos, TweenInfo.new(.5, Enum.EasingStyle.Quad));
 
     local clockValue = scope:Value(0);
     local clockThread = ClockValue(clockValue);
     table.insert(scope, function()
+        task.cancel(clockThread);
+    end)
+
+    local disconnect
+    disconnect = Board.ObserveGameResult(board):onChange(function()
+        disconnect();
         task.cancel(clockThread);
     end)
 
@@ -389,7 +394,7 @@ return function(scope: Scope, board: Board)
         Size = UDim2.fromScale(1, 1),
         BackgroundColor3 = Colors.Screen.Background,
         [Children] = {
-            Clock(scope),
+            Clock(scope, board),
             Minefield(scope, board),
         }
     }
