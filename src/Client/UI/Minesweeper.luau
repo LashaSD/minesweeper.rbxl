@@ -130,6 +130,8 @@ local Cell_Size = function(board: Board,row: number, col: number)
     return UDim2.fromScale((1 - CELL_PADDING) / board.Rows, (1 - CELL_PADDING) / board.Cols);
 end
 
+-- TODO(!!): Modularize this `Cell_Init()` function block code
+-- TODO(!!): Fix the issue, with difficulty clicking `TextButton`, because it's size is being animated.
 local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
     local style = TweenInfo.new(0.1, Enum.EasingStyle.Quad);
 

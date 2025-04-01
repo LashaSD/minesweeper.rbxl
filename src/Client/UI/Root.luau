@@ -45,6 +45,7 @@ local Btn = function(scope: Scope, text: string, clicked, color, gradient)
     }
 end
 
+-- TODO(!!): Modularize the following code to be reusable and configurable
 local BtnContainer = function(scope: Scope, text: string, promptTriggered)
     local posGoal = scope:Value(UDim2.fromScale(.5, 5));
     local pos = scope:Spring(posGoal);
