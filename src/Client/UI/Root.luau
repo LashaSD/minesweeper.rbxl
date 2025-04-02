@@ -216,7 +216,7 @@ return function(scope: Scope)
         Name = "Root",
         Position = UDim2.fromScale(0, -0.08),
         Size = UDim2.fromScale(1, 1.08),
-        BackgroundColor3 = Color3.fromHex("181818"),
+        BackgroundColor3 = Color3.fromHex("101010"),
         [Children] = children
     }
 end

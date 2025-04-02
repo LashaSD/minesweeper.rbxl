@@ -28,7 +28,7 @@ local CELL_ELEVATION = UDim2.fromScale(.25, .25);
 
 local Colors = {
     Screen = {
-        Background = Color3.fromHex("181818")
+        Background = Color3.fromHex("101010")
     },
     Clock = {
         Background = Color3.fromRGB(0, 0, 0),
