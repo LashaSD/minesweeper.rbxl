@@ -223,7 +223,7 @@ local PlayGamePrompt = function(scope: Scope, gameStarted: Fusion.Value<boolean>
         Size = UDim2.fromScale(.4, .15),
         BackgroundTransparency = 1,
         [Children] = {
-            InverseGradientBtnContainer(scope, "Play", gameStarted);
+            InverseGradientBtnContainer(scope, "Play", gameStarted, Colors.Menu.PlayButton.Background, Colors.Menu.PlayButton.Foreground);
         }
     }
 end

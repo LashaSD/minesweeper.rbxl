@@ -15,6 +15,10 @@ return {
         },
         Blur = {
             Background = Color3.fromRGB(20, 20, 20)
+        },
+        PlayButton = {
+            Background = Color3.fromRGB(255, 255, 255),
+            Foreground = Color3.fromRGB(0, 0, 0),
         }
     },
     Screen = {
