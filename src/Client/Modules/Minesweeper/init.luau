@@ -34,7 +34,7 @@ local GameTbl: { [Board]: GameData } = {};
 local Board = {}
 
 function Board.IsAvailable(board: Board, row: number, col: number)
-    return peek(board.Grid[row][col]) ~= CellState.Exploded and peek(board.Grid[row][col]) ~= CellState.Exploded_Mine and peek(board.Grid[row][col]) ~= CellState.Exploded_Dug;
+    return peek(board.Grid[row][col]) >= CellState.Idle;
 end
 
 function Board.IsMine(board: Board, row: number, col: number)
