@@ -150,25 +150,32 @@ local WinMessage = function(scope: Scope)
         AnchorPoint = Vector2.new(.5, .5),
         Size = UDim2.fromScale(.5, .15),
         Position = UDim2.fromScale(.5, .25),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = 1
     }
 end
 
 local MenuPrompt = function(scope: Scope, gameStarted, gameResult)
-    return scope:New "TextButton" {
-        Text = "Menu",
-        TextColor3 = Color3.fromRGB(255, 255, 255),
-        TextScaled = true,
-        Font = Enum.Font.RobotoMono,
-        Name = "MenuPrompt",
-        AnchorPoint = Vector2.new(.5, .5),
-        Size = UDim2.fromScale(.5, .15),
-        Position = UDim2.fromScale(.5, .75),
-        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-        [OnEvent "MouseButton1Up"] = function()
+    local trigger = scope:Value(false);
+
+    local disconnect do
+        disconnect = scope:Observer(trigger):onChange(function()
             gameStarted:set(false);
             gameResult:set(GameResult.Uninitialized);
-        end
+            disconnect();
+        end)
+    end
+
+    return scope:New "Frame" {
+        AnchorPoint = Vector2.new(.5, .5),
+        Position = UDim2.fromScale(.5, .75),
+        Size = UDim2.fromScale(.5, .15),
+        BackgroundTransparency = 1,
+        [Children] = {
+            InverseGradientBtnContainer(scope, "Menu", trigger, Color3.fromHex("000000"), Color3.fromHex("FFFFFF"));
+        }
+    }
+end
     }
 end
 
