@@ -30,10 +30,10 @@ local Gradient = function(scope: Scope, rotation: number, offset)
     }
 end
 
-local Btn = function(scope: Scope, text: string, clicked, color, gradient)
+local InverseGradientBtn = function(scope: Scope, text: string, textCol: Color3 | Fusion.UsedAs<Color3>, clicked: Fusion.Value<boolean>, gradient: UIGradient)
     return scope:New "TextButton" {
         Text = text,
-        TextColor3 = color,
+        TextColor3 = textCol,
         Font = Enum.Font.RobotoMono,
         Size = UDim2.fromScale(1, 1),
         BackgroundTransparency = 1,
@@ -45,70 +45,79 @@ local Btn = function(scope: Scope, text: string, clicked, color, gradient)
     }
 end
 
--- TODO(!!): Modularize the following code to be reusable and configurable
-local BtnContainer = function(scope: Scope, text: string, promptTriggered)
-    local posGoal = scope:Value(UDim2.fromScale(.5, 5));
-    local pos = scope:Spring(posGoal);
+local InverseGradientBtnContainer = function(scope: Scope, text: string, promptTriggered, color: Color3?, colorInverse: Color3?)
+    if color == nil or colorInverse == nil then
+        color = Color3.fromRGB(255, 255, 255);
+        colorInverse = Color3.fromRGB(0, 0, 0);
+    end
 
-    local defaultSize = UDim2.fromScale(.4, .15);
+    assert(color ~= nil, `never`);
+    assert(colorInverse ~= nil, `never`);
+
+    local hoverGradientBegin = Vector2.new(-1, 0);
+    local hoverGradientEnd = Vector2.new(1, 0);
+
+    local clickedGradientBegin = Vector2.new(0, 1);
+    local clickedGradientEnd = Vector2.new(0, -1);
 
     local tweenStyle = TweenInfo.new(.3, Enum.EasingStyle.Quad);
-    local gradientOffset = scope:Value(Vector2.new(-1, 0));
-    local hoverLock = scope:Value(false);
-    local hoverAnim = scope:Tween(gradientOffset, tweenStyle);
+    local hoverGradientGoal = scope:Value(Vector2.new(-1, 0));
+    local hoverAnim = scope:Tween(hoverGradientGoal, tweenStyle);
     local hoverGradient = Gradient(scope, 0, hoverAnim);
 
-    local colorGoal = scope:Computed(function(use, scope)
-        return if use(gradientOffset) == Vector2.new(-1, 0) then Color3.new(0, 0, 0) else Color3.new(255, 255, 255);
-    end);
-    local color = scope:Tween(colorGoal, tweenStyle);
+    local txtColor, txtColAnim do
+        txtColor = scope:Computed(function(use, scope)
+            return if use(hoverGradientGoal) == hoverGradientBegin then colorInverse else color;
+        end);
 
-    local clicked = scope:Value(false);
+        txtColAnim = scope:Tween(txtColor, tweenStyle);
+    end
 
-    local clickedGoal = Vector2.new(0, -1);
-    local clickedGradientGoal = scope:Computed(function(use, scope)
-        return if use(clicked) then Vector2.new(0, -1) else Vector2.new(0, 1)
-    end);
-    local clickedStyle = TweenInfo.new(.15, Enum.EasingStyle.Quad)
-    local clickedAnim = scope:Tween(clickedGradientGoal, clickedStyle);
+    local clicked, clickedGradient do
+        clicked = scope:Value(false);
 
-    local clickObserver = scope:Observer(clickedAnim);
-    local disconnect
-    disconnect = clickObserver:onChange(function()
-        -- on start
-        hoverLock:set(true);
-        if peek(clickedAnim) == clickedGoal then
-            promptTriggered:set(true);
-            disconnect();
-        end
-    end);
+        local clickedGradientGoal = scope:Computed(function(use, scope)
+            return if use(clicked) then clickedGradientEnd else clickedGradientBegin
+        end);
+        local clickedStyle = TweenInfo.new(.3, Enum.EasingStyle.Quad)
+        clickedGradient = scope:Tween(clickedGradientGoal, clickedStyle);
+    end
 
-    posGoal:set(UDim2.fromScale(.5, .35));
+    local disconnect do
+        local observer = scope:Observer(clickedGradient);
+        disconnect = observer:onChange(function()
+            if peek(clickedGradient) == clickedGradientEnd then
+                promptTriggered:set(true);
+                disconnect();
+            end
+        end);
+    end
+
     return scope:New "Frame" {
         AnchorPoint = Vector2.new(.5, .5),
-        Size = defaultSize,
-        Position = pos,
-        BackgroundColor3 = Color3.new(0, 0, 0),
+        Position = UDim2.fromScale(.5, .5),
+        Size = UDim2.fromScale(1, 1),
+        BackgroundColor3 = colorInverse,
         [OnEvent "MouseEnter"] = function()
-            if not peek(hoverLock) then
-                gradientOffset:set(Vector2.new(1, 0));
+            if not peek(clicked) then
+                hoverGradientGoal:set(hoverGradientEnd);
             end
         end,
         [OnEvent "MouseLeave"] = function()
-            if not peek(hoverLock) then
-                gradientOffset:set(Vector2.new(-1, 0));
+            if not peek(clicked) then
+                hoverGradientGoal:set(hoverGradientBegin);
             end
         end,
         [Children] = {
             scope:New "Frame" {
                 Size = UDim2.fromScale(1, 1),
-                BackgroundColor3 = Color3.new(255, 255, 255),
+                BackgroundColor3 = color,
                 [Children] = {
-                    Btn(scope, text, clicked, color, Gradient(scope, -90, clickedAnim)),
+                    InverseGradientBtn(scope, text, txtColAnim, clicked, Gradient(scope, -90, clickedGradient)),
                     hoverGradient,
                 }
             },
-            Gradient(scope, -90, clickedAnim)
+            Gradient(scope, -90, clickedGradient)
         }
     }
 end
@@ -160,6 +169,22 @@ local MenuPrompt = function(scope: Scope, gameStarted, gameResult)
     }
 end
 
+local PlayGamePrompt = function(scope: Scope, gameStarted: Fusion.Value<boolean>)
+    local pos = scope:Value(UDim2.fromScale(.5, 5));
+    local posSpring = scope:Spring(pos);
+
+    pos:set(UDim2.fromScale(.5, .35));
+    return scope:New "Frame" {
+        AnchorPoint = Vector2.new(.5, .5),
+        Position = posSpring,
+        Size = UDim2.fromScale(.4, .15),
+        BackgroundTransparency = 1,
+        [Children] = {
+            InverseGradientBtnContainer(scope, "Play", gameStarted);
+        }
+    }
+end
+
 return function(scope: Scope)
     local gameStarted = scope:Value(false);
     local gameResult = scope:Value(GameResult.Uninitialized);
@@ -206,7 +231,7 @@ return function(scope: Scope)
                 minesweeperUI:Destroy();
             end
 
-            table.insert(tbl, BtnContainer(scope, "Play", gameStarted));
+            table.insert(tbl, PlayGamePrompt(scope, gameStarted));
         end
 
         return tbl;
