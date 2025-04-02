@@ -37,7 +37,7 @@ local Colors = {
     Minefield = {
         Goal = Color3.fromHex("2a6642"),
         Background = Color3.fromHex("252525"),
-        Foreground = Color3.fromRGB(0, 255, 0)
+        Foreground = Color3.fromHex("252525")
     },
     Cell = {
         Background = Color3.fromHex("22586b"),
@@ -286,32 +286,22 @@ local Cells = function(scope: Scope, board: Board)
 end
 
 local CellContainer = function(scope: Scope, board: Board)
-    local backgroundColor = scope:Computed(function(use, scope)
-        return Colors.Minefield.Background:Lerp(Colors.Minefield.Goal, use(Board.DugCells(board)) / (board.Rows * board.Cols));
-    end);
-
     return scope:New "Frame" {
         AnchorPoint = Vector2.new(.5, .5),
         Position = UDim2.fromScale(.5, .5),
         Size = UDim2.fromScale(.95, .95),
-        BackgroundColor3 = backgroundColor,
+        BackgroundColor3 = Colors.Minefield.Foreground,
         [Children] = Cells(scope, board)
     }
 end
 
 local Minefield = function(scope: Scope, board: Board)
-    local backgroundColor = scope:Computed(function(use, scope)
-        return Colors.Minefield.Background:Lerp(Colors.Minefield.Goal, use(Board.DugCells(board)) / (board.Rows * board.Cols));
-    end);
-
     local maxx = math.max(board.Rows, board.Cols);
     local lerp = function(a: number, b: number, t: number)
         return a + (b - a) * t;
     end
     -- maps range [10, 18] to [.5, .75]
     local size = lerp(.5, .75, (maxx - 10) / 8);
-
-    local colorTween = scope:Tween(backgroundColor, TweenInfo.new(0.05, Enum.EasingStyle.Linear));
 
     return scope:New "Frame" {
         Name = "Minefield",
@@ -320,7 +310,7 @@ local Minefield = function(scope: Scope, board: Board)
         Position = UDim2.fromScale(0.5, 0.5),
         Size = UDim2.fromScale(size, size),
 
-        BackgroundColor3 = colorTween,
+        BackgroundColor3 = Colors.Minefield.Background,
 
         [Children] = {
             AspectRatio(scope, board.Rows, board.Cols),
