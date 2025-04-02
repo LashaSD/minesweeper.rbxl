@@ -16,6 +16,10 @@ local GameResult = require(Modules.Minesweeper.GameResultEnum);
 
 local Minesweeper = require(script.Parent.Minesweeper);
 
+-- Constants
+local FORCED_EASY_MODE = false;
+
+-- Types
 type Scope = Fusion.Scope<typeof(Fusion)>;
 
 local Gradient = function(scope: Scope, rotation: number, offset)
@@ -213,10 +217,16 @@ return function(scope: Scope)
                 Board.Deinit(board);
             end
 
-            local rows = math.random(10, 18);
-            local cols = math.random(10, 18);
-            local mineDensity = math.random(10, 25) / 100;
-            board = Board.Init(rows, cols, math.ceil(rows * cols * mineDensity), gameResult);
+            if FORCED_EASY_MODE then
+                local rows = 5;
+                local cols = 5;
+                board = Board.Init(rows, cols, 2, gameResult);
+            else
+                local rows = math.random(10, 18);
+                local cols = math.random(10, 18);
+                local mineDensity = math.random(10, 25) / 100;
+                board = Board.Init(rows, cols, math.ceil(rows * cols * mineDensity), gameResult);
+            end
 
             minesweeperUI = Minesweeper(gameScope, board);
             if minesweeperUI ~= nil then
