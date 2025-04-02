@@ -150,8 +150,7 @@ local WinMessage = function(scope: Scope)
         AnchorPoint = Vector2.new(.5, .5),
         Size = UDim2.fromScale(.5, .15),
         Position = UDim2.fromScale(.5, .25),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        BackgroundTransparency = 1
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     }
 end
 
