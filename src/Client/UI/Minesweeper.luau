@@ -41,7 +41,6 @@ local Colors = {
     },
     Cell = {
         Background = Color3.fromHex("22586b"),
-        Foreground = Color3.fromHex("181818"),
         Stroke = Color3.fromRGB(255, 255, 255),
         Hover = {
             Background = Color3.fromHex("27667B"),
