@@ -24,6 +24,8 @@ type Board = Board.Board;
 -- Constants
 local CELL_PADDING = 0.09
 
+local CELL_ELEVATION = UDim2.fromScale(.25, .25);
+
 local Colors = {
     Screen = {
         Background = Color3.fromHex("181818")
@@ -44,7 +46,7 @@ local Colors = {
         Hover = {
             Background = Color3.fromHex("27667B"),
         },
-        DugMap = {
+        MineCountMap = {
             [0] = Color3.fromHex("22586b"),
             [1] = Color3.fromHex("00FFFF"),
             [2] = Color3.fromHex("00FF00"),
@@ -94,14 +96,14 @@ local RoundCorner = function(scope: Scope, radius)
     }
 end
 
-local CenteredText = function(scope: Scope, state, size: Vector2, color: Color3)
+local CenteredText = function(scope: Scope, text: Fusion.Value<string>, size: Vector2)
     return scope:New "TextLabel" {
         AnchorPoint = Vector2.new(.5, .5),
         Size = UDim2.fromScale(size.X, size.Y),
         Position = UDim2.fromScale(.5, .5),
         Font = Enum.Font.RobotoMono,
         BackgroundTransparency = 1,
-        Text = state,
+        Text = text,
         TextScaled = true
     }
 end
@@ -130,68 +132,39 @@ local Cell_Size = function(board: Board,row: number, col: number)
     return UDim2.fromScale((1 - CELL_PADDING) / board.Rows, (1 - CELL_PADDING) / board.Cols);
 end
 
--- TODO(!!): Modularize this `Cell_Init()` function block code
--- TODO(!!): Fix the issue, with difficulty clicking `TextButton`, because it's size is being animated.
-local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
+local Cell_Icon = function(
+    scope: Scope,
+    board: Board,
+    row: number,
+    col: number,
+    size: Fusion.Value<UDim2>,
+    color: Fusion.Value<Color3>
+)
+    local state = board.Grid[row][col];
+    local text = scope:Value("");
+
     local style = TweenInfo.new(0.1, Enum.EasingStyle.Quad);
 
-    local size = scope:Value(UDim2.fromScale(.01, .01));
+    size:set(UDim2.fromScale(.01, .01));
     local sizeAnim = scope:Tween(size, style);
+    size:set(UDim2.fromScale(1, 1));
 
-    local outline = scope:Value(0);
-    local outlineAnim = scope:Tween(outline, style);
-
-    local color = scope:Value(Colors.Cell.Background);
     local colorAnim = scope:Tween(color, style);
 
     local transparency = scope:Value(0);
     local transparencyAnim = scope:Tween(transparency, style);
 
-    local elevation = UDim2.fromScale(.015, .015);
-    local z = scope:Value(1);
-
-    local animateHoverBegin = function()
-        size:set(Cell_Size(board, row, col) + elevation);
-        color:set(Colors.Cell.Hover.Background);
-        outline:set(1);
-        z:set(69)
-    end
-
-    local animateHoverEnd = function()
-        size:set(Cell_Size(board, row, col));
-        color:set(Colors.Cell.Background);
-        outline:set(0);
-        z:set(1)
-    end
-
-    local animateMouseDown = function()
-        size:set(Cell_Size(board, row, col) - elevation);
-    end
-
-    local animateMouseUp = function()
-        size:set(Cell_Size(board, row, col));
-    end
-
-    local safe = function(callback)
-        return function(...)
-            if Board.IsAvailable(board, row, col) and not Board.IsDug(board, row, col) then
-                callback(...);
-            end
-        end
-    end
-
     local observer = Board.ObserveCell(board, row, col);
-    local state = board.Grid[row][col];
 
     local shakeOffset = scope:Value(UDim2.fromOffset(0, 0));
     local pos = scope:Computed(function(use, scope)
-        return Cell_Pos(board, row, col) + use(shakeOffset);
+        return UDim2.fromScale(.5, .5) + use(shakeOffset);
     end);
 
     local disconnect
     disconnect = observer:onChange(function()
         local stateValue = peek(state);
-        if stateValue == CellState.Exploded then
+        if stateValue == CellState.Exploded or stateValue == CellState.Exploded_Mine then
             if peek(color) == Colors.Cell.Hover.Background then
                 color:set(Colors.Cell.Background);
             end
@@ -203,53 +176,84 @@ local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
             if cellValue == 0 then
                 transparency:set(1);
             end
-            color:set(Colors.Cell.DugMap[Board.ComputeValue(board, row, col)]);
-            Pop(size, Cell_Size(board, row, col), Cell_Size(board, row, col) - elevation, .05);
+            color:set(Colors.Cell.MineCountMap[Board.ComputeValue(board, row, col)]);
+            Pop(size, UDim2.fromScale(1, 1), UDim2.fromScale(1, 1) - CELL_ELEVATION, .05);
         end
     end)
 
-    local text = scope:Computed(function(use)
-        if use(transparency) == 1 then return "" end
-        if use(state) == CellState.Dug or use(state) == CellState.Exploded_Dug then
-            local cellValue = Board.ComputeValue(board, row, col);
-            return if cellValue > 0 then tostring(cellValue) else "";
-        elseif use(state) == CellState.Flagged or use(state) == CellState.Flagged_Mine then
-            return "🚩";
-        elseif use(state) == CellState.Exploded_Mine then
-            return "M"
-        end
-
-        return "";
-    end)
-
-    local corner = scope:Value(UDim.new(.5, 0));
-    local cornerAnim = scope:Tween(corner, style);
-
-    size:set(Cell_Size(board, row, col));
-    corner:set(UDim.new(0, 0));
-
-    return scope:New "TextButton" {
-        -- Text = text,
-        -- TextColor3 = Colors.Cell.Foreground,
-        -- Font = Enum.Font.RobotoMono,
+    local textLabel = scope:New "Frame" {
+        AnchorPoint = Vector2.new(.5, .5),
+        Size = sizeAnim,
+        Position = pos,
         BackgroundColor3 = colorAnim,
         BackgroundTransparency = transparencyAnim,
+        [Children] = CenteredText(scope, text, Vector2.new(.9, .9))
+    }
+
+    return scope:Computed(function(use)
+        if use(state) == CellState.Dug or use(state) == CellState.Exploded_Dug then
+            local cellValue = Board.ComputeValue(board, row, col);
+            text:set(if cellValue > 0 then tostring(cellValue) else "");
+            return textLabel;
+        elseif use(state) == CellState.Flagged or use(state) == CellState.Flagged_Mine then
+            text:set("🚩");
+            return textLabel;
+        elseif use(state) == CellState.Exploded_Mine then
+            text:set("M");
+            return textLabel;
+        end
+
+        text:set("");
+        return textLabel;
+    end);
+end
+
+local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
+    local defaultSize = UDim2.fromScale(1, 1);
+    local size = scope:Value(UDim2.fromScale(.01, .01));
+
+    local color = scope:Value(Colors.Cell.Background);
+
+    local animateHoverBegin = function()
+        size:set(defaultSize + CELL_ELEVATION);
+        color:set(Colors.Cell.Hover.Background);
+    end
+
+    local animateHoverEnd = function()
+        size:set(defaultSize);
+        color:set(Colors.Cell.Background);
+    end
+
+    local animateMouseDown = function()
+        size:set(defaultSize - CELL_ELEVATION);
+    end
+
+    local animateMouseUp = function()
+        size:set(defaultSize);
+    end
+
+    local safe = function(callback)
+        return function(...)
+            if Board.IsAvailable(board, row, col) and not Board.IsDug(board, row, col) then
+                callback(...);
+            end
+        end
+    end
+
+    return scope:New "TextButton" {
+        BackgroundTransparency = 1,
         AnchorPoint = Vector2.new(.5, .5),
-        Position = pos,
-        Size = sizeAnim,
-        ZIndex = z,
+        Position = Cell_Pos(board, row, col),
+        Size = Cell_Size(board, row, col),
 
         [OnEvent "MouseEnter"] = safe(animateHoverBegin),
         [OnEvent "MouseLeave"] = safe(animateHoverEnd),
         [OnEvent "MouseButton1Down"] = safe(animateMouseDown),
-        [OnEvent "MouseButton2Down"] = safe(animateMouseDown),
-
         [OnEvent "MouseButton1Up"] = safe(function(x: number, y: number)
             animateMouseUp();
             Board.Dig(board, row, col);
-            -- TODO(!!): Dig the cell
         end),
-
+        [OnEvent "MouseButton2Down"] = safe(animateMouseDown),
         [OnEvent "MouseButton2Up"] = safe(function(x: number, y: number)
             animateMouseUp();
             if Board.IsFlagged(board, row, col) then
@@ -259,14 +263,7 @@ local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
             end
         end),
 
-        [Children] = {
-            scope:New "UIStroke" {
-                Color = colorAnim,
-                Thickness = outlineAnim
-            },
-            CenteredText(scope, text, Vector2.new(.8, .8), Colors.Cell.Foreground),
-            RoundCorner(scope, cornerAnim)
-        }
+        [Children] = Cell_Icon(scope, board, row, col, size, color)
     }
 end
 
