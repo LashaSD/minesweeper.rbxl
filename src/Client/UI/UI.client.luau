@@ -16,5 +16,6 @@ local scope = Fusion.scoped(Fusion);
 local UI = scope:New "ScreenGui" {
     Parent = Players.LocalPlayer.PlayerGui,
     Name = "Minesweeper",
+    IgnoreGuiInset = true,
     [Children] = Root(scope)
 }

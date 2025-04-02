@@ -290,8 +290,8 @@ return function(scope: Scope)
 
     return scope:New "Frame" {
         Name = "Root",
-        Position = UDim2.fromScale(0, -0.08),
-        Size = UDim2.fromScale(1, 1.08),
+        Position = UDim2.fromScale(0, 0),
+        Size = UDim2.fromScale(1, 1),
         BackgroundColor3 = Colors.Menu.Background,
         [Children] = children
     }
