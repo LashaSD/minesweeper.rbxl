@@ -277,7 +277,7 @@ return function(scope: Scope)
         elseif not use(gameStarted) and use(gameResult) == GameResult.Uninitialized then
             if gameScope ~= nil then
                 gameScope:doCleanup();
-                -- Colorschemes.roll();
+                -- TODO(!!): Add a theme picker
                 Colorschemes.roll();
                 Colors = Colorschemes.get();
             end
