@@ -27,7 +27,7 @@ local Gradient = function(scope: Scope, rotation: number, offset)
         }),
         Offset = offset,
         Rotation = rotation
-    }
+    } :: UIGradient
 end
 
 local InverseGradientBtn = function(scope: Scope, text: string, textCol: Color3 | Fusion.UsedAs<Color3>, clicked: Fusion.Value<boolean>, gradient: UIGradient)
