@@ -79,9 +79,9 @@ local function Shake(duration: number, intensity: number, shakeOffset)
 end
 
 local function Pop(size, defaultSize: UDim2, goalSize: UDim2, waitTime: number)
-    size:set(goalSize) -- Shrink to 80%
-    task.wait(waitTime) -- Wait briefly
-    size:set(defaultSize) -- Return to normal
+    size:set(goalSize);
+    task.wait(waitTime);
+    size:set(defaultSize);
 end
 
 local AspectRatio = function(scope: Scope, x: number, y: number?)
