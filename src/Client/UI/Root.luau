@@ -15,6 +15,7 @@ local Board = require(Modules.Minesweeper);
 local GameResult = require(Modules.Minesweeper.GameResultEnum);
 
 local Minesweeper = require(script.Parent.Minesweeper);
+local Colors = require(script.Parent.Colors);
 
 -- Constants
 local FORCED_EASY_MODE = false;
@@ -151,14 +152,14 @@ end
 local LoseMessage = function(scope: Scope)
     return scope:New "TextLabel" {
         Text = "Game Over",
-        TextColor3 = Color3.fromRGB(0, 0, 0),
+        TextColor3 = Colors.Menu.LoseMessage.Foreground,
         TextScaled = true,
         Font = Enum.Font.RobotoMono,
         Name = "GameOverMessage",
         AnchorPoint = Vector2.new(.5, .5),
         Size = UDim2.fromScale(.5, .15),
         Position = UDim2.fromScale(.5, .25),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundColor3 = Colors.Menu.LoseMessage.Background,
         ZIndex = 3
     }
 end
@@ -166,14 +167,14 @@ end
 local WinMessage = function(scope: Scope)
     return scope:New "TextLabel" {
         Text = "You Won",
-        TextColor3 = Color3.fromRGB(0, 0, 0),
+        TextColor3 = Colors.Menu.WinMessage.Foreground,
         TextScaled = true,
         Font = Enum.Font.RobotoMono,
         Name = "YouWonMessage",
         AnchorPoint = Vector2.new(.5, .5),
         Size = UDim2.fromScale(.5, .15),
         Position = UDim2.fromScale(.5, .25),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundColor3 = Colors.Menu.WinMessage.Background,
         ZIndex = 3
     }
 end
@@ -196,7 +197,7 @@ local MenuPrompt = function(scope: Scope, gameStarted, gameResult)
         BackgroundTransparency = 1,
         ZIndex = 3,
         [Children] = {
-            InverseGradientBtnContainer(scope, "Menu", trigger, Color3.fromHex("000000"), Color3.fromHex("FFFFFF"));
+            InverseGradientBtnContainer(scope, "Menu", trigger, Colors.Menu.BackToMenuPrompt.Background, Colors.Menu.BackToMenuPrompt.Foreground);
         }
     }
 end
@@ -205,7 +206,7 @@ local EndgameBlur = function(scope: Scope)
     return scope:New "Frame" {
         Name = "Blur",
         Size = UDim2.fromScale(1, 1),
-        BackgroundColor3 = Color3.fromHex("202020"),
+        BackgroundColor3 = Colors.Menu.Blur.Background,
         ZIndex = 2,
         [Children] = BlurGradient(scope, 0, Vector2.new(0, 0))
     }
@@ -291,7 +292,7 @@ return function(scope: Scope)
         Name = "Root",
         Position = UDim2.fromScale(0, -0.08),
         Size = UDim2.fromScale(1, 1.08),
-        BackgroundColor3 = Color3.fromHex("101010"),
+        BackgroundColor3 = Colors.Menu.Background,
         [Children] = children
     }
 end
