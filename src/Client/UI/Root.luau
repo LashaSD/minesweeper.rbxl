@@ -122,7 +122,7 @@ local InverseGradientBtnContainer = function(scope: Scope, text: string, promptT
     }
 end
 
-local GameOverMessage = function(scope: Scope)
+local LoseMessage = function(scope: Scope)
     return scope:New "TextLabel" {
         Text = "Game Over",
         TextColor3 = Color3.fromRGB(0, 0, 0),
@@ -136,7 +136,7 @@ local GameOverMessage = function(scope: Scope)
     }
 end
 
-local YouWonMessage = function(scope: Scope)
+local WinMessage = function(scope: Scope)
     return scope:New "TextLabel" {
         Text = "You Won",
         TextColor3 = Color3.fromRGB(0, 0, 0),
@@ -164,7 +164,7 @@ local MenuPrompt = function(scope: Scope, gameStarted, gameResult)
         BackgroundColor3 = Color3.fromRGB(0, 0, 0),
         [OnEvent "MouseButton1Up"] = function()
             gameStarted:set(false);
-            gameResult:set(0);
+            gameResult:set(GameResult.Uninitialized);
         end
     }
 end
@@ -197,9 +197,9 @@ return function(scope: Scope)
 
         if use(gameResult) > GameResult.Uninitialized then
             if use(gameResult) == GameResult.Lose then
-                table.insert(tbl, GameOverMessage(scope));
+                table.insert(tbl, LoseMessage(scope));
             elseif use(gameResult) == GameResult.Win then
-                table.insert(tbl, YouWonMessage(scope));
+                table.insert(tbl, WinMessage(scope));
             end
 
             table.insert(tbl, MenuPrompt(scope, gameStarted, gameResult));
