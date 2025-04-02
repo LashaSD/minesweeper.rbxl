@@ -142,13 +142,13 @@ local YouWonMessage = function(scope: Scope)
     }
 end
 
-local PlayAgainPrompt = function(scope: Scope, gameStarted, gameResult)
+local MenuPrompt = function(scope: Scope, gameStarted, gameResult)
     return scope:New "TextButton" {
-        Text = "Play Again",
+        Text = "Menu",
         TextColor3 = Color3.fromRGB(255, 255, 255),
         TextScaled = true,
         Font = Enum.Font.RobotoMono,
-        Name = "PlayAgainPrompt",
+        Name = "MenuPrompt",
         AnchorPoint = Vector2.new(.5, .5),
         Size = UDim2.fromScale(.5, .15),
         Position = UDim2.fromScale(.5, .75),
@@ -177,7 +177,7 @@ return function(scope: Scope)
                 table.insert(tbl, YouWonMessage(scope));
             end
 
-            table.insert(tbl, PlayAgainPrompt(scope, gameStarted, gameResult));
+            table.insert(tbl, MenuPrompt(scope, gameStarted, gameResult));
             if minesweeperUI ~= nil then
                 table.insert(tbl, minesweeperUI);
             end
