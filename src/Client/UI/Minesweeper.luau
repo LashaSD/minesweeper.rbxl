@@ -212,15 +212,18 @@ local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
     local size = scope:Value(UDim2.fromScale(.01, .01));
 
     local color = scope:Value(Colors.Cell.Background);
+    local z = scope:Value(1);
 
     local animateHoverBegin = function()
         size:set(defaultSize + CELL_ELEVATION);
         color:set(Colors.Cell.Hover.Background);
+        z:set(69);
     end
 
     local animateHoverEnd = function()
         size:set(defaultSize);
         color:set(Colors.Cell.Background);
+        z:set(1);
     end
 
     local animateMouseDown = function()
@@ -244,6 +247,7 @@ local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
         AnchorPoint = Vector2.new(.5, .5),
         Position = Cell_Pos(board, row, col),
         Size = Cell_Size(board, row, col),
+        ZIndex = z,
 
         [OnEvent "MouseEnter"] = safe(animateHoverBegin),
         [OnEvent "MouseLeave"] = safe(animateHoverEnd),
