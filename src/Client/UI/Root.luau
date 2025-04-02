@@ -15,7 +15,8 @@ local Board = require(Modules.Minesweeper);
 local GameResult = require(Modules.Minesweeper.GameResultEnum);
 
 local Minesweeper = require(script.Parent.Minesweeper);
-local Colors = require(script.Parent.Colors);
+local Colorschemes = require(script.Parent.Colors);
+local Colors = Colorschemes.get();
 
 -- Constants
 local FORCED_EASY_MODE = false;
@@ -276,6 +277,8 @@ return function(scope: Scope)
         elseif not use(gameStarted) and use(gameResult) == GameResult.Uninitialized then
             if gameScope ~= nil then
                 gameScope:doCleanup();
+                -- Colorschemes.roll();
+                Colors = Colorschemes.get();
             end
 
             if minesweeperUI ~= nil then

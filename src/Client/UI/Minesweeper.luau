@@ -26,7 +26,8 @@ local CELL_PADDING = 0.09
 
 local CELL_ELEVATION = UDim2.fromScale(.25, .25);
 
-local Colors = require(script.Parent.Colors);
+local Colorschemes = require(script.Parent.Colors);
+local Colors = Colorschemes.get();
 
 -- Components
 local function Shake(duration: number, intensity: number, shakeOffset)
@@ -352,6 +353,7 @@ local Clock = function(scope: Scope, board: Board)
 end
 
 return function(scope: Scope, board: Board)
+    Colors = Colorschemes.get();
     return scope:New "Frame" {
         Name = "Minesweeper",
         Size = UDim2.fromScale(1, 1),
