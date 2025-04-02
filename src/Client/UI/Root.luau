@@ -278,6 +278,7 @@ return function(scope: Scope)
             if gameScope ~= nil then
                 gameScope:doCleanup();
                 -- Colorschemes.roll();
+                Colorschemes.roll();
                 Colors = Colorschemes.get();
             end
 
