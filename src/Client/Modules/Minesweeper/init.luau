@@ -217,9 +217,28 @@ end
 function Board.Populate(board: Board, mines: number)
     local availableCells = {};
 
+    local value = function(row: number, col: number)
+        if row < 1 or row > board.Rows or col < 1 or col > board.Cols then return 0 end
+        return if peek(board.Grid[row][col]) == CellState.Idle then 0 else 1
+    end
+
+    local ok = function(row: number, col: number)
+        local cnt = value(row, col)
+        + value(row, col-1)
+        + value(row-1, col-1)
+        + value(row-1, col)
+        + value(row-1, col+1)
+        + value(row, col+1)
+        + value(row+1, col+1)
+        + value(row+1, col)
+        + value(row+1, col-1)
+
+        return cnt == 0;
+    end
+
     for row = 1, board.Rows do
         for col = 1, board.Cols do
-            if peek(board.Grid[row][col]) == CellState.Idle then
+            if ok(row, col) then
                 table.insert(availableCells, {row, col});
             end
         end
