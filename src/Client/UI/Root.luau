@@ -34,6 +34,28 @@ local Gradient = function(scope: Scope, rotation: number, offset)
     } :: UIGradient
 end
 
+local BlurGradient = function(scope: Scope, rotation: number, offset)
+    local goal = scope:Value(1);
+    local anim = scope:Tween(goal, TweenInfo.new(.5, Enum.EasingStyle.Linear));
+
+    local sequence = scope:Computed(function(use)
+        return NumberSequence.new({
+            NumberSequenceKeypoint.new(0, use(anim)),
+            NumberSequenceKeypoint.new(0.1, use(anim)),
+            NumberSequenceKeypoint.new(0.5, 1),
+            NumberSequenceKeypoint.new(0.9, use(anim)),
+            NumberSequenceKeypoint.new(1, use(anim))
+        })
+    end)
+
+    goal:set(.1);
+    return scope:New "UIGradient" {
+        Transparency = sequence,
+        Offset = offset,
+        Rotation = rotation
+    } :: UIGradient
+end
+
 local InverseGradientBtn = function(scope: Scope, text: string, textCol: Color3 | Fusion.UsedAs<Color3>, clicked: Fusion.Value<boolean>, gradient: UIGradient)
     return scope:New "TextButton" {
         Text = text,
@@ -136,7 +158,8 @@ local LoseMessage = function(scope: Scope)
         AnchorPoint = Vector2.new(.5, .5),
         Size = UDim2.fromScale(.5, .15),
         Position = UDim2.fromScale(.5, .25),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        ZIndex = 3
     }
 end
 
@@ -151,7 +174,7 @@ local WinMessage = function(scope: Scope)
         Size = UDim2.fromScale(.5, .15),
         Position = UDim2.fromScale(.5, .25),
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        BackgroundTransparency = 1
+        ZIndex = 3
     }
 end
 
@@ -171,11 +194,20 @@ local MenuPrompt = function(scope: Scope, gameStarted, gameResult)
         Position = UDim2.fromScale(.5, .75),
         Size = UDim2.fromScale(.5, .15),
         BackgroundTransparency = 1,
+        ZIndex = 3,
         [Children] = {
             InverseGradientBtnContainer(scope, "Menu", trigger, Color3.fromHex("000000"), Color3.fromHex("FFFFFF"));
         }
     }
 end
+
+local EndgameBlur = function(scope: Scope)
+    return scope:New "Frame" {
+        Name = "Blur",
+        Size = UDim2.fromScale(1, 1),
+        BackgroundColor3 = Color3.fromHex("202020"),
+        ZIndex = 2,
+        [Children] = BlurGradient(scope, 0, Vector2.new(0, 0))
     }
 end
 
@@ -206,6 +238,8 @@ return function(scope: Scope)
         local tbl = {};
 
         if use(gameResult) > GameResult.Uninitialized then
+            table.insert(tbl, EndgameBlur(scope));
+
             if use(gameResult) == GameResult.Lose then
                 table.insert(tbl, LoseMessage(scope));
             elseif use(gameResult) == GameResult.Win then
