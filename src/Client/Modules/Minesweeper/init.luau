@@ -75,13 +75,13 @@ function Board.Explode(board: Board)
 end
 
 function Board.Dig(board: Board, row: number, col: number)
+    if Board.IsFlagged(board, row, col) or Board.IsDug(board, row, col) then return end
+
     if Board.IsArmedMine(board, row, col) then
         Board.Explode(board);
         GameTbl[board].GameResult:set(GameResult.Lose);
         return
     end
-
-    if Board.IsFlagged(board, row, col) then return end
 
     local dugCells = GameTbl[board].DugCells;
     local dugCellsValue = peek(dugCells);
@@ -94,7 +94,7 @@ function Board.Dig(board: Board, row: number, col: number)
     end
 
     if Board.NeighboringMines(board, row, col) == 0 or dugCellsValue == 0 then
-        Board.BFS_Zero_Pop(board, row, col);
+        Board.Dig_Breadth_Safe(board, row, col);
     end
 
     if (peek(dugCells) + Board.CountMines(board)) == (board.Rows * board.Cols) then
@@ -104,7 +104,7 @@ function Board.Dig(board: Board, row: number, col: number)
     return false;
 end
 
-function Board.BFS_Zero_Pop(board: Board, row: number, col: number)
+function Board.Dig_Breadth_Safe(board: Board, row: number, col: number)
     local tryAndDig = function(i: number, j: number)
         local withinRange = not (i < 1 or i > board.Rows or j < 1 or j > board.Cols);
 
@@ -113,6 +113,24 @@ function Board.BFS_Zero_Pop(board: Board, row: number, col: number)
             if isIdle then
                 Board.Dig(board, i, j);
             end
+        end
+    end
+
+    tryAndDig(row,   col-1);
+    tryAndDig(row-1, col-1);
+    tryAndDig(row-1, col  );
+    tryAndDig(row-1, col+1);
+    tryAndDig(row,   col+1);
+    tryAndDig(row+1, col+1);
+    tryAndDig(row+1, col  );
+    tryAndDig(row+1, col-1);
+end
+
+function Board.Dig_Breadth(board: Board, row: number, col: number)
+    local tryAndDig = function(i: number, j: number)
+        local withinRange = not (i < 1 or i > board.Rows or j < 1 or j > board.Cols);
+        if withinRange then
+            Board.Dig(board, i, j);
         end
     end
 
@@ -146,6 +164,44 @@ function Board.NeighboringMines(board: Board, row: number, col: number)
     local value = function(i: number, j: number)
         if i < 1 or i > board.Rows or j < 1 or j > board.Cols then return 0 end
         return if Board.IsMine(board, i, j) then 1 else 0;
+    end
+
+    local v = 0
+    + value(row, col-1)
+    + value(row-1, col-1)
+    + value(row-1, col)
+    + value(row-1, col+1)
+    + value(row, col+1)
+    + value(row+1, col+1)
+    + value(row+1, col)
+    + value(row+1, col-1)
+
+    return v;
+end
+
+function Board.CountNeighborIf(board: Board, row: number, col: number, state: number)
+    local value = function(i: number, j: number)
+        if i < 1 or i > board.Rows or j < 1 or j > board.Cols then return 0 end
+        return if peek(board.Grid[i][j]) == state then 1 else 0;
+    end
+
+    local v = 0
+    + value(row, col-1)
+    + value(row-1, col-1)
+    + value(row-1, col)
+    + value(row-1, col+1)
+    + value(row, col+1)
+    + value(row+1, col+1)
+    + value(row+1, col)
+    + value(row+1, col-1)
+
+    return v;
+end
+
+function Board.NeighboringFlags(board: Board, row: number, col: number)
+    local value = function(i: number, j: number)
+        if i < 1 or i > board.Rows or j < 1 or j > board.Cols then return 0 end
+        return if Board.IsFlagged(board, i, j) then 1 else 0;
     end
 
     local v = 0

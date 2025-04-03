@@ -102,6 +102,18 @@ local Cell_Size = function(board: Board,row: number, col: number)
     return UDim2.fromScale((1 - CELL_PADDING) / board.Rows, (1 - CELL_PADDING) / board.Cols);
 end
 
+--- returns what the color of the state should be when the cell is unanimated / static
+local Cell_Static_Color = function(board: Board, row: number, col: number)
+    local stateValue = peek(board.Grid[row][col]);
+    if stateValue == CellState.Exploded_Mine then
+        return Colors.Mine.Background;
+    elseif stateValue == CellState.Dug then
+        return Colors.Cell.MineCountMap[Board.NeighboringMines(board, row, col)];
+    end
+
+    return Colors.Cell.Background;
+end
+
 local Cell_Icon = function(
     scope: Scope,
     board: Board,
@@ -147,11 +159,11 @@ local Cell_Icon = function(
             disconnect();
         elseif stateValue == CellState.Dug then
             -- some new kind of animation and text value
-            local cellValue = Board.ComputeValue(board, row, col);
+            local cellValue = Board.NeighboringMines(board, row, col);
             if cellValue == 0 then
                 transparency:set(1);
             end
-            color:set(Colors.Cell.MineCountMap[Board.ComputeValue(board, row, col)]);
+            color:set(Colors.Cell.MineCountMap[Board.NeighboringMines(board, row, col)]);
             Pop(size, UDim2.fromScale(1, 1), UDim2.fromScale(1, 1) - CELL_ELEVATION, .05);
         end
     end)
@@ -167,7 +179,7 @@ local Cell_Icon = function(
 
     return scope:Computed(function(use)
         if use(state) == CellState.Dug or use(state) == CellState.Exploded_Dug then
-            local cellValue = Board.ComputeValue(board, row, col);
+            local cellValue = Board.NeighboringMines(board, row, col);
             text:set(if cellValue > 0 then tostring(cellValue) else "");
             return textLabel;
         elseif use(state) == CellState.Flagged or use(state) == CellState.Flagged_Mine then
@@ -184,36 +196,63 @@ local Cell_Icon = function(
 end
 
 local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
+    local state = board.Grid[row][col];
+
     local defaultSize = UDim2.fromScale(1, 1);
     local size = scope:Value(UDim2.fromScale(.01, .01));
 
     local color = scope:Value(Colors.Cell.Background);
     local z = scope:Value(1);
 
+    local ok = function()
+        local available = Board.IsAvailable(board, row, col);
+        local isDug = Board.IsDug(board, row, col);
+        local mines = Board.NeighboringMines(board, row, col);
+        local flags = Board.NeighboringFlags(board, row, col);
+        local digables = Board.CountNeighborIf(board, row, col, CellState.Idle) + Board.CountNeighborIf(board, row, col, CellState.Mine);
+
+        local ok = available;
+        if isDug then
+            ok = ok and (mines == flags and digables > 0);
+        end
+
+        return ok
+    end
+
+    local hovering = scope:Value(false);
     local animateHoverBegin = function()
+        hovering:set(true);
         size:set(defaultSize + CELL_ELEVATION);
         color:set(Colors.Cell.Hover.Background);
         z:set(69);
     end
 
     local animateHoverEnd = function()
-        size:set(defaultSize);
-        color:set(Colors.Cell.Background);
-        z:set(1);
+        if peek(hovering) then
+            hovering:set(false);
+            size:set(defaultSize);
+            color:set(Cell_Static_Color(board, row, col));
+            z:set(1);
+        end
     end
 
+    local clicked = scope:Value(false);
     local animateMouseDown = function()
+        clicked:set(true);
         size:set(defaultSize - CELL_ELEVATION);
     end
 
     local animateMouseUp = function()
-        size:set(defaultSize);
+        if peek(clicked) then
+            clicked:set(false);
+            size:set(defaultSize);
+        end
     end
 
-    local safe = function(callback)
-        return function(...)
-            if Board.IsAvailable(board, row, col) and not Board.IsDug(board, row, col) then
-                callback(...);
+    local wrapOk = function(callback: () -> ())
+        return function()
+            if ok() then
+                callback();
             end
         end
     end
@@ -225,15 +264,19 @@ local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
         Size = Cell_Size(board, row, col),
         ZIndex = z,
 
-        [OnEvent "MouseEnter"] = safe(animateHoverBegin),
-        [OnEvent "MouseLeave"] = safe(animateHoverEnd),
-        [OnEvent "MouseButton1Down"] = safe(animateMouseDown),
-        [OnEvent "MouseButton1Up"] = safe(function(x: number, y: number)
+        [OnEvent "MouseEnter"] = wrapOk(animateHoverBegin),
+        [OnEvent "MouseLeave"] = animateHoverEnd,
+        [OnEvent "MouseButton1Down"] = wrapOk(animateMouseDown),
+        [OnEvent "MouseButton1Up"] = wrapOk(function()
             animateMouseUp();
-            Board.Dig(board, row, col);
+            if peek(state) == CellState.Idle or peek(state) == CellState.Mine then
+                Board.Dig(board, row, col);
+            elseif peek(state) == CellState.Dug then
+                Board.Dig_Breadth(board, row, col);
+            end
         end),
-        [OnEvent "MouseButton2Down"] = safe(animateMouseDown),
-        [OnEvent "MouseButton2Up"] = safe(function(x: number, y: number)
+        [OnEvent "MouseButton2Down"] = animateMouseDown,
+        [OnEvent "MouseButton2Up"] = wrapOk(function()
             animateMouseUp();
             if Board.IsFlagged(board, row, col) then
                 Board.Unflag(board, row, col);
