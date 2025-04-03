@@ -72,13 +72,12 @@ function Board.Explode(board: Board)
             end
         end
     end
-
-    GameTbl[board].GameResult:set(GameResult.Lose);
 end
 
 function Board.Dig(board: Board, row: number, col: number)
     if Board.IsArmedMine(board, row, col) then
         Board.Explode(board);
+        GameTbl[board].GameResult:set(GameResult.Lose);
         return
     end
 
