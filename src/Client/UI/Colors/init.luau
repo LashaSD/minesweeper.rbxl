@@ -33,6 +33,9 @@ export type ColorConfig = {
         Background: Color3,
         Foreground: Color3
     },
+    Mine: {
+        Background: Color3
+    },
     Cell: {
         Background: Color3,
         Stroke: Color3,
@@ -49,7 +52,7 @@ local colors = {} do
     end
 end
 
-local current = require(script.Default) :: ColorConfig;
+local current = require(script.Old) :: ColorConfig;
 
 local roll = function()
     current = colors[math.random(1, #colors)];

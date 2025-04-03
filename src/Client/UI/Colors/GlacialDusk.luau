@@ -33,6 +33,7 @@ return {
         Background = Color3.fromRGB(25, 25, 25),
         Foreground = Color3.fromRGB(200, 200, 200)
     },
+    Mine = { Background = Color3.fromRGB(100, 100, 100) },
     Cell = {
         Background = Color3.fromRGB(50, 50, 50), -- Balanced neutral gray
         Stroke = Color3.fromRGB(170, 170, 170), -- Softer outline

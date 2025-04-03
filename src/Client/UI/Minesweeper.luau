@@ -137,6 +137,11 @@ local Cell_Icon = function(
             if peek(color) == Colors.Cell.Hover.Background then
                 color:set(Colors.Cell.Background);
             end
+
+            if stateValue == CellState.Exploded_Mine then
+                color:set(Colors.Mine.Background);
+            end
+
             Shake(.3, 5, shakeOffset)
             disconnect();
         elseif stateValue == CellState.Dug then

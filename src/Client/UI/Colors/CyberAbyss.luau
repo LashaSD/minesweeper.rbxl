@@ -33,6 +33,7 @@ return {
         Background = Color3.fromHex("222831"),
         Foreground = Color3.fromHex("393E46")
     },
+    Mine = { Background = Color3.fromHex("222831") },
     Cell = {
         Background = Color3.fromHex("393E46"),
         Stroke = Color3.fromHex("EEEEEE"), -- Crisp white for clean lines

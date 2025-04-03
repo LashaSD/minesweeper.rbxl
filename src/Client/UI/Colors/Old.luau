@@ -33,6 +33,7 @@ return {
         Background = Color3.fromHex("252525"),
         Foreground = Color3.fromHex("252525")
     },
+    Mine = { Background = Color3.fromHex("30709F") },
     Cell = {
         Background = Color3.fromHex("22586b"),
         Stroke = Color3.fromRGB(255, 255, 255),

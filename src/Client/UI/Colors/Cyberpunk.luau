@@ -34,6 +34,7 @@ return {
         Background = Color3.fromHex("181818"),
         Foreground = Color3.fromHex("252525")
     },
+    Mine = { Background = Color3.fromHex("2A3335") },
     Cell = {
         Background = Color3.fromHex("12232e"), -- Dark teal
         Stroke = Color3.fromRGB(0, 255, 255), -- Neon cyan

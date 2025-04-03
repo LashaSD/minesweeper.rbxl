@@ -34,6 +34,7 @@ return {
         Background = Color3.fromHex("6F4E37"),
         Foreground = Color3.fromHex("ECB176")
     },
+    Mine = { Background = Color3.fromHex("6F4E37") },
     Cell = {
         Background = Color3.fromHex("A67B5B"),
         Stroke = Color3.fromHex("FED8B1"), -- Soft cream for gentle contrast
