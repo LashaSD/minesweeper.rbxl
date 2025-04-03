@@ -93,7 +93,7 @@ function Board.Dig(board: Board, row: number, col: number)
         Board.Populate(board, GameTbl[board].InitialMines);
     end
 
-    if Board.ComputeValue(board, row, col) == 0 or dugCellsValue == 0 then
+    if Board.NeighboringMines(board, row, col) == 0 or dugCellsValue == 0 then
         Board.BFS_Zero_Pop(board, row, col);
     end
 
@@ -142,7 +142,7 @@ function Board.Unflag(board: Board, row: number, col: number)
     end
 end
 
-function Board.ComputeValue(board: Board, row: number, col: number)
+function Board.NeighboringMines(board: Board, row: number, col: number)
     local value = function(i: number, j: number)
         if i < 1 or i > board.Rows or j < 1 or j > board.Cols then return 0 end
         return if Board.IsMine(board, i, j) then 1 else 0;
