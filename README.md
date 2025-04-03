@@ -10,8 +10,14 @@ A small project to experiment with UI development using Fusion. This was built i
     $ cd minesweeper.rbxl
     ```
 2. **Build & Run**
-    ```console
-    $ chmod +x ./rblx.sh
-    $ ./rblx.sh install
-    $ ./rblx.sh build
-    ```
+### Linux and Mac
+```console
+$ chmod +x ./rblx.sh
+$ ./rblx.sh install
+$ ./rblx.sh build
+```
+### Windows
+```console
+$ ./rblx.bat install
+$ ./rblx.bat build
+```
