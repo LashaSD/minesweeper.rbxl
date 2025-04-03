@@ -275,7 +275,7 @@ local Cell_Init = function(scope: Scope, board: Board, row: number, col: number)
                 Board.Dig_Breadth(board, row, col);
             end
         end),
-        [OnEvent "MouseButton2Down"] = animateMouseDown,
+        [OnEvent "MouseButton2Down"] = wrapOk(animateMouseDown),
         [OnEvent "MouseButton2Up"] = wrapOk(function()
             animateMouseUp();
             if Board.IsFlagged(board, row, col) then
