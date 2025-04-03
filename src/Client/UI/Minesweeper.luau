@@ -277,7 +277,7 @@ local Minefield = function(scope: Scope, board: Board)
         return a + (b - a) * t;
     end
     -- maps range [10, 18] to [.5, .75]
-    local size = lerp(.5, .75, (maxx - 10) / 8);
+    local size = lerp(.5, .85, (maxx - 10) / 8);
 
     return scope:New "Frame" {
         Name = "Minefield",
