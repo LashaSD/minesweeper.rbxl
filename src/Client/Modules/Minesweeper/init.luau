@@ -1,3 +1,4 @@
+--!native
 -- Roblox Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage");
 
