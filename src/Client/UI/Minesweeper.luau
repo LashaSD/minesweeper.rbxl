@@ -293,11 +293,9 @@ end
 
 local ClockValue = function(clock)
     return task.spawn(function()
-        local elapsed = 1;
         local totalElapsed = 0;
         while true do
-            local diff = 1 - elapsed;
-            elapsed = task.wait(1 - diff)
+            local elapsed = task.wait(1)
             totalElapsed += elapsed;
             clock:set(totalElapsed);
         end
@@ -305,8 +303,6 @@ local ClockValue = function(clock)
 end
 
 local Clock = function(scope: Scope, board: Board)
-    -- TODO(!!): fix the clcok skips 32nd second.
-
     local pos = scope:Value(UDim2.fromScale(.5, -1));
     local posAnim = scope:Tween(pos, TweenInfo.new(.5, Enum.EasingStyle.Quad));
 
