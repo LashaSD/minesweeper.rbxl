@@ -46,7 +46,7 @@ return {
             [2] = Color3.fromHex("EEEEEE"),
             [3] = Color3.fromHex("00ADB5"),
             [4] = Color3.fromHex("222831"),
-            [5] = Color3.fromHex("393E46"),
+            [5] = Color3.fromHex("597F75"),
             [6] = Color3.fromHex("EEEEEE"),
             [7] = Color3.fromHex("00ADB5"),
             [8] = Color3.fromHex("EEEEEE")
