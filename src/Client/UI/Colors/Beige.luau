@@ -15,7 +15,7 @@ return {
             Foreground = Color3.fromHex("6F4E37"),
         },
         Blur = {
-            Background = Color3.fromHex("6F4E37") -- Keeps everything in a warm tone
+            Background = Color3.fromHex("9b5b2d") -- Keeps everything in a warm tone
         },
         PlayButton = {
             Background = Color3.fromHex("ECB176"), -- Orange highlight
